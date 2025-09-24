@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Indeed Enhanced
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.0.1
 // @description  Add infinite scroll; filter search results;
 // @author       thegroosalugg
 // @match        https://*.indeed.com/*
@@ -13,80 +13,79 @@
 // @downloadURL  https://github.com/thegroosalugg/tamper_monkey/releases/latest/download/indeed.user.js
 // ==/UserScript==
 
+(function () {
+  "use strict";
 
-(function() {
-    'use strict';
+  // **WATCH == update these values if site DOM changes
+  const liSelector = "li.css-1ac2h1w"; // **WATCH
+  const containerSelector = "#mosaic-provider-jobcards"; // **WATCH
 
+  const getResults = (doc = document) => doc.querySelectorAll(liSelector);
+  const getContainer = () => document.querySelector(containerSelector);
 
-    // **WATCH == update these values if site DOM changes
-    const liSelector = 'li.css-1ac2h1w'; // **WATCH
-    const containerSelector = '#mosaic-provider-jobcards'; // **WATCH
+  // --- filter search results ---
+  function filterResults() {
+    const terms = ["senior", "lead"]; // **FILTER
+    const h2Selector = "h2.jobTitle span[title]"; // **WATCH
 
-    const getResults = (doc = document) => doc.querySelectorAll(liSelector);
-    const getContainer = () => document.querySelector(containerSelector);
+    getResults().forEach((li) => {
+      const span = li.querySelector(h2Selector);
+      const match = terms.some((term) => span?.title.toLowerCase().includes(term));
+      if (match) {
+        console.log("Removed:", span?.title);
+        li.remove();
+      }
+    });
+  }
 
-    // --- filter search results ---
-    function filterResults() {
-        const terms = ['senior', 'lead']; // **FILTER
-        const h2Selector = 'h2.jobTitle span[title]'; // **WATCH
+  // --- Infinite scroll logic ---
+  const pageSize = 10; // **WATCH
+  let nextStart = pageSize;
+  let loading = false;
 
-        getResults().forEach(li => {
-            const span = li.querySelector(h2Selector);
-            const match = terms.some(term => span?.title.toLowerCase().includes(term));
-            if (match) {
-                console.log("Removed:", span?.title);
-                li.remove();
-            }
-        });
-    }
+  async function loadMore() {
+    if (loading) return;
+    loading = true;
+    console.log("\n\nFetching...");
 
-    // --- Infinite scroll logic ---
-    const pageSize = 10; // **WATCH
-    let nextStart = pageSize;
-    let loading = false;
+    const url = new URL(window.location.href);
+    url.searchParams.set("start", nextStart);
 
-    async function loadMore() {
-        if (loading) return;
-        loading = true;
-        console.log('\n\nFetching...');
+    const resp = await fetch(url.toString(), { credentials: "include" });
+    const text = await resp.text();
+    const doc = new DOMParser().parseFromString(text, "text/html");
+    const results = getResults(doc);
+    const container = getContainer();
 
-        const url = new URL(window.location.href);
-        url.searchParams.set("start", nextStart);
+    results.forEach((result) => {
+      container.appendChild(result);
+    });
 
-        const resp = await fetch(url.toString(), { credentials: "include" });
-        const text = await resp.text();
-        const doc = new DOMParser().parseFromString(text, "text/html");
-        const results = getResults(doc);
-        const container = getContainer();
+    nextStart += pageSize;
+    loading = false;
+    console.log("results fetched:", results.length, "\n\n");
+  }
 
-        results.forEach(result => {
-            container.appendChild(result);
-        });
+  function infiniteScroll() {
+    window.addEventListener("scroll", () => {
+      const hasScrolled =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 500;
+      if (hasScrolled) loadMore();
+    });
+  }
 
-        nextStart += pageSize;
-        loading = false;
-        console.log('results fetched:', results.length, '\n\n');
-    }
+  function observeResults() {
+    const container = getContainer();
+    if (!container) return;
+    const observer = new MutationObserver(filterResults);
+    observer.observe(container, { childList: true, subtree: true });
+  }
 
-    function infiniteScroll() {
-        window.addEventListener("scroll", () => {
-            const hasScrolled = (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500;
-            if (hasScrolled) loadMore();
-        });
-    }
+  // --- Bootstrap ---
+  function init() {
+    observeResults();
+    infiniteScroll();
+  }
 
-    function observeResults() {
-        const container = getContainer();
-        if (!container) return;
-        const observer = new MutationObserver(filterResults);
-        observer.observe(container, { childList: true, subtree: true });
-    }
-
-    // --- Bootstrap ---
-    function init() {
-        observeResults();
-        infiniteScroll();
-    }
-
-    init();
+  init();
 })();
