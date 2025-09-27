@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Indeed Enhanced
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  Add infinite scroll; filter search results;
 // @author       thegroosalugg
 // @match        https://*.indeed.com/*
@@ -10,7 +10,7 @@
 // @run-at       document-end
 // @grant        none
 // @updateURL    https://raw.githubusercontent.com/thegroosalugg/tamper_monkey/main/indeed/indeed.meta.js
-// @downloadURL  https://github.com/thegroosalugg/tamper_monkey/releases/latest/download/indeed.user.js
+// @downloadURL  https://raw.githubusercontent.com/thegroosalugg/tamper_monkey/main/indeed/indeed.user.js
 // ==/UserScript==
 
 (function () {
