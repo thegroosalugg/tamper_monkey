@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Dev Server
 // @namespace   http://tampermonkey.net/
-// @version     0.0.1
+// @version     0.0.2
 // @description Server for testing scripts. Configured to discard cache for instant feedback on refresh
 // @author      thegroosalugg
 // @match       *://*/*
