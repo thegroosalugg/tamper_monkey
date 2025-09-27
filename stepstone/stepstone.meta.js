@@ -7,4 +7,6 @@
 // @match        https://*.stepstone.de/*
 // @run-at       document-end
 // @grant        none
+// @updateURL    https://raw.githubusercontent.com/thegroosalugg/tamper_monkey/main/stepstone/stepstone.meta.js
+// @downloadURL  https://raw.githubusercontent.com/thegroosalugg/tamper_monkey/main/stepstone/stepstone.user.js
 // ==/UserScript==
