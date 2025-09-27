@@ -2,7 +2,7 @@
 // @name         Indeed Enhanced
 // @namespace    http://tampermonkey.net/
 // @version      1.0.3
-// @description  Add infinite scroll; filter search results;
+// @description  Add infinite scroll;
 // @author       thegroosalugg
 // @match        https://*.indeed.com/*
 // @match        https://*.indeed.de/*
@@ -20,24 +20,6 @@
   const liSelector = "li.css-1ac2h1w"; // **WATCH
   const containerSelector = "#mosaic-provider-jobcards"; // **WATCH
 
-  const getResults = (doc = document) => doc.querySelectorAll(liSelector);
-  const getContainer = () => document.querySelector(containerSelector);
-
-  // --- filter search results ---
-  function filterResults() {
-    const terms = ["senior", "lead"]; // **FILTER
-    const h2Selector = "h2.jobTitle span[title]"; // **WATCH
-
-    getResults().forEach((li) => {
-      const span = li.querySelector(h2Selector);
-      const match = terms.some((term) => span?.title.toLowerCase().includes(term));
-      if (match) {
-        console.log("Removed:", span?.title);
-        li.remove();
-      }
-    });
-  }
-
   // --- Infinite scroll logic ---
   const pageSize = 10; // **WATCH
   let nextStart = pageSize;
@@ -54,8 +36,8 @@
     const resp = await fetch(url.toString(), { credentials: "include" });
     const text = await resp.text();
     const doc = new DOMParser().parseFromString(text, "text/html");
-    const results = getResults(doc);
-    const container = getContainer();
+    const results = doc.querySelectorAll(liSelector);
+    const container = document.querySelector(containerSelector);
 
     results.forEach((result) => {
       container.appendChild(result);
@@ -74,18 +56,5 @@
     });
   }
 
-  function observeResults() {
-    const container = getContainer();
-    if (!container) return;
-    const observer = new MutationObserver(filterResults);
-    observer.observe(container, { childList: true, subtree: true });
-  }
-
-  // --- Bootstrap ---
-  function init() {
-    observeResults();
-    infiniteScroll();
-  }
-
-  init();
+  infiniteScroll();
 })();
