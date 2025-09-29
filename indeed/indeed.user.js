@@ -16,43 +16,83 @@
 (function () {
   "use strict";
 
-  // **WATCH == update these values if site DOM changes
+  const tag        = "[TAMPER MONKEY]"; // faster logging
+  const ulSelector = "#mosaic-provider-jobcards"; // **WATCH
   const liSelector = "li.css-1ac2h1w"; // **WATCH
-  const containerSelector = "#mosaic-provider-jobcards"; // **WATCH
 
   // --- Infinite scroll logic ---
-  const pageSize = 10; // **WATCH
-  let nextStart = pageSize;
-  let loading = false;
+  const pageSize   = 10; // **WATCH
+  let nextStart    = pageSize;
+  let lastScrollY  = 0; // Track last scroll position
+  let isLoading    = false;
+  let hasTriggered = false; // Prevent multiple triggers at bottom of page
+  let hasEnded     = false; // Track if we've reached the end
+
+  function getId(element) {
+    const getText = (selector) => element.querySelector(selector)?.innerText.trim();
+    const title   = getText("h2");
+    const company = getText(".company_location"); // **WATCH
+    if (!title || !company) return null;
+    return `${title} ${company}`;
+  }
 
   async function loadMore() {
-    if (loading) return;
-    loading = true;
-    console.log("\n\nFetching...");
+    if (isLoading || hasEnded) return;
+    isLoading    = true;
+    hasTriggered = true;
+    console.clear();
+    console.log(`\n\n ${tag} Fetching...`);
 
-    const url = new URL(window.location.href);
+    const url   = new URL(window.location.href);
     url.searchParams.set("start", nextStart);
+    const resp  = await fetch(url.toString(), { credentials: "include" });
+    const text  = await resp.text();
+    const doc   = new DOMParser().parseFromString(text, "text/html");
+    const items = doc.querySelectorAll(liSelector);
+    const list  = document.querySelector(ulSelector);
 
-    const resp = await fetch(url.toString(), { credentials: "include" });
-    const text = await resp.text();
-    const doc = new DOMParser().parseFromString(text, "text/html");
-    const results = doc.querySelectorAll(liSelector);
-    const container = document.querySelector(containerSelector);
+    // Get existing job IDs
+    const existingIds = new Set();
+    document.querySelectorAll(liSelector).forEach((li) => {
+      const id = getId(li);
+      if (id) existingIds.add(id);
+    });
+    // console.log(existingIds);
 
-    results.forEach((result) => {
-      container.appendChild(result);
+    let count = 0; // count fetched items
+    items.forEach((item) => {
+      const id = getId(item);
+      if (!existingIds.has(id)) {
+        list.appendChild(item);
+        count++;
+      }
     });
 
-    nextStart += pageSize;
-    loading = false;
-    console.log("results fetched:", results.length, "\n\n");
+    // If no new items were added, we've reached the end
+    if (count === 0) {
+      hasEnded = true;
+      console.log(`${tag} End of list!`);
+    } else {
+      nextStart += pageSize;
+      console.log(`${tag} New items added: ${count} out of ${items.length} fetched\n\n`);
+    }
+
+    isLoading = false;
   }
 
   function infiniteScroll() {
     window.addEventListener("scroll", () => {
-      const hasScrolled =
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 500;
-      if (hasScrolled) loadMore();
+      if (hasEnded) return;
+
+      const currentScrollY  = window.scrollY;
+      const isScrollingDown = currentScrollY > lastScrollY;
+      const nearBottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 750;
+
+      if (!nearBottom) hasTriggered = false;
+      if (isScrollingDown && nearBottom && !hasTriggered) loadMore();
+
+      lastScrollY = currentScrollY;
     });
   }
 
