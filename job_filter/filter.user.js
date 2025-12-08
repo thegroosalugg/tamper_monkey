@@ -7,8 +7,8 @@
 // @match        *://*/*
 // @run-at       document-end
 // @grant        none
-// @updateURL    https://raw.githubusercontent.com/thegroosalugg/tamper_monkey/main/filter/filter.meta.js
-// @downloadURL  https://raw.githubusercontent.com/thegroosalugg/tamper_monkey/main/filter/filter.user.js
+// @updateURL    https://raw.githubusercontent.com/thegroosalugg/tamper_monkey/main/job_filter/filter.meta.js
+// @downloadURL  https://raw.githubusercontent.com/thegroosalugg/tamper_monkey/main/job_filter/filter.user.js
 // ==/UserScript==
 
 (function () {
