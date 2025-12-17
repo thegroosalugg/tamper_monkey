@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Linkedin Enhanced
+// @name         Linkedin
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.0
 // @description  Filter nav items;
 // @author       thegroosalugg
 // @match        https://*.linkedin.com/*
@@ -45,6 +45,7 @@
 
     // filters nav list for unwanted items. On 1 nav routes, upsell nav is under same tree and uses text
     ul.querySelectorAll("li").forEach((li) => {
+      if (li.querySelector(".global-nav__me")) return; // do not delete drop down menu
       const text = li.textContent.trim().toLowerCase();
       if (terms.some((term) => text.includes(term))) {
         console.log("Removed item:", text);
