@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Linkedin
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1.0
 // @description  Filter nav items;
 // @author       thegroosalugg
 // @match        https://*.linkedin.com/*

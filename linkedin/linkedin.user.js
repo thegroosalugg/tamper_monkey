@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Linkedin
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1.0
 // @description  Filter nav items;
 // @author       thegroosalugg
 // @match        https://*.linkedin.com/*
@@ -16,42 +16,61 @@
   console.log("TamperMonkey: Linkedin Script");
 
   const terms = ["home", "premium", "business"];
-  const observer = new MutationObserver(() => {
-    // grab only headers with a nav child # ignores linkedin toast header
-    const headers = Array.from(document.querySelectorAll("header")).filter((h) =>
+
+  function cleanNav() {
+    // grab only headers with a nav child (ignores toast headers)
+    const headers = Array.from(document.querySelectorAll("header")).filter(h =>
       h.querySelector("nav")
     );
-
-    const header = headers[0]; // first header with nav
+    const header = headers[0];
     if (!header) return;
 
-    // linkedin either has 1 nav, or 2 navs for upsell buttons depending on route
     const navs = header.querySelectorAll("nav");
     if (!navs.length) return;
 
-    // on some routes there will be a 2nd upsell nav - removed it if it exists
-    navs.forEach((n, i) => {
+    // remove 2nd upsell nav if it exists (on some routes only)
+    navs.forEach((nav, i) => {
       if (i > 0) {
-        console.log("Removed upsell nav", n);
-        n.remove();
+        console.log("Removed upsell nav", nav);
+        nav.remove();
       }
     });
 
-    const nav = navs[0]; // only first nav matters
+    const nav = navs[0];
     if (!nav) return;
 
     const ul = nav.querySelector("ul");
     if (!ul) return;
 
-    // filters nav list for unwanted items. On 1 nav routes, upsell nav is under same tree and uses text
-    ul.querySelectorAll("li").forEach((li) => {
-      if (li.querySelector(".global-nav__me")) return; // do not delete drop down menu
+    // Linkedin uses different DOMs on different routes: continue to remove upsell items from first nav
+    ul.querySelectorAll("li").forEach(li => {
+      if (li.querySelector(".global-nav__me")) return; // keep dropdown menu
       const text = li.textContent.trim().toLowerCase();
-      if (terms.some((term) => text.includes(term))) {
+      if (terms.some(term => text.includes(term))) {
         console.log("Removed item:", text);
         li.remove();
       }
     });
+  }
+
+  function removeAds() {
+    const adRoot = document.getElementById("react-root");
+    if (adRoot) adRoot.remove();
+
+    const adsContainer = document.getElementById("ads-container");
+    if (adsContainer) adsContainer.remove();
+
+    document.querySelectorAll(".ad-banner-container").forEach(el => el.remove());
+  }
+
+  // run once initially
+  cleanNav();
+  removeAds();
+
+  // observe mutations
+  const observer = new MutationObserver(() => {
+    cleanNav();
+    removeAds();
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
