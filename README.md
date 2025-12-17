@@ -19,6 +19,7 @@ custom scripts for common websites
 
 ## linkedin
 - filter nav items: manual - add terms to array
+- remove ads
 
 ## overflow
 - simple observer that removes body: overflow hidden from sites whenever they try to apply it to prevent scrolling
